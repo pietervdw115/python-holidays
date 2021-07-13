@@ -11,6 +11,18 @@
 #  Website: https://github.com/dr-prodigy/python-holidays
 #  License: MIT (see LICENSE file)
 
+# TODO
+# Add Isra and Miraj in Malaysia
+# Add NUZUL AL-QUARAN DAY
+# Fix Thaipusam Holiday
+# Add The Sultan of Pahang Hol in Pahang
+# Add Birthday of SPB Yang di Pertuan Agong
+# Add Birthday of the Sultan of Kedah in Kedah
+# Add Birthday of the Raja of Perlis
+# Add Hijri New Year Awal Muharram or Maal Hijrah
+# Add The Sultan of Johor Hol
+# Add Muhammad's Birthday
+
 from datetime import date, timedelta
 
 from dateutil.easter import easter
@@ -20,6 +32,7 @@ from holidays.constants import (
     JAN,
     FEB,
     MAR,
+    APR,
     MAY,
     JUN,
     JUL,
@@ -34,29 +47,28 @@ from holidays.holiday_base import HolidayBase
 from holidays.utils import get_gre_date
 
 
-class Singapore(HolidayBase):
-
-    # Holidays Act: https://sso.agc.gov.sg/Act/HA1998
-    # https://www.mom.gov.sg/employment-practices/public-holidays
-    # https://en.wikipedia.org/wiki/Public_holidays_in_Singapore
-
-    # Holidays prior to 1969 (Act 24 of 1968—Holidays (Amendment) Act 1968)
-    # are estimated.
-
-    # Holidays prior to 2000 may not be accurate.
-
-    # Holidays after 2022: the following four moving date holidays whose exact
-    # date is announced yearly are estimated (and so denoted):
-    # - Hari Raya Puasa*
-    # - Hari Raya Haji*
-    # - Vesak Day
-    # - Deepavali
-    # *only if hijri-converter library is installed, otherwise a warning is
-    #  raised that this holiday is missing. hijri-converter requires
-    #  Python >= 3.6
+class Malaysia(HolidayBase):
+    STATES = [
+        "JHR",  # "Johor"
+        "KDH",  # "Kedah",
+        "KTN",  # "Kelantan",
+        "MLK",  # "Malacca",
+        "NSN",  # "Negeri Sembilan",
+        "PHG",  # "Pahang",
+        "PNG",  # "Penang",
+        "PRK",  # "Perak",
+        "PLS",  # "Perlis",
+        "SBH",  # "Sabah",
+        "SWK",  # "Sarawak",
+        "SGR",  # "Selangor",
+        "TRG",  # "Terengganu",
+        "KUL",  # "Kuala Lumpur",
+        "LBN",  # "Labuan",
+        "PJY",  # "Putrajaya",
+    ]
 
     def __init__(self, **kwargs):
-        self.country = "SG"
+        self.country = "MY"
         HolidayBase.__init__(self, **kwargs)
 
     def _populate(self, year):
@@ -64,12 +76,121 @@ class Singapore(HolidayBase):
         # New Year's Day
         self[date(year, JAN, 1)] = "New Year's Day"
 
+        if year > 2010:
+            self[date(year, SEP, 16)] = "Malaysia Day"
+
         # Chinese New Year (two days)
         hol_date = self.get_lunar_n_y_date(year)
         self[hol_date] = "Chinese New Year"
-        self[hol_date + rd(days=+1)] = "Chinese New Year"
+        self[hol_date + rd(days=+1)] = "Chinese New Year Holiday"
 
-        # Hari Raya Puasa
+        if self.state == "NSN":
+            self[
+                date(year, JAN, 14)
+            ] = "Birthday of the Sultan of Negeri Sembilan"
+
+        # Thaipusam is an annual Hindu festival,
+        # bserved on the day of the first full moon
+        # during the Tamil month of Thai
+        # TODO  This dates are hardcore we need to
+        # find a way to calculate it dynamically
+        dates_obs = {
+            2018: [(JAN, 31)],
+            2019: [(JAN, 21)],
+            2020: [(FEB, 8)],
+            2021: [(JAN, 28)],
+            2022: [(JAN, 18)],
+            2023: [(FEB, 4)],
+            2024: [(JAN, 25)],
+            2025: [(FEB, 11)],
+            2026: [(FEB, 1)],
+            2027: [(JAN, 22)],
+        }
+        if year in dates_obs:
+            if self.state in ("KUL", "PJY", "JHR", "NSN", "PRK", "PNG", "SGR"):
+                for date_obs in dates_obs[year]:
+                    hol_date = date(year, *date_obs)
+                    self[hol_date] = "Thaipusam"
+
+        if self.state in ("KUL", "LBN", "PJY"):
+            if year > 1973:
+                self[date(year, FEB, 1)] = "Federal Territory Day"
+
+        if self.state == "TRG":
+            self[
+                date(year, MAR, 4)
+            ] = "Anniversary of the Installation of the Sultan of Terengganu"
+            self[date(year, APR, 26)] = "Birthday of the Sultan of Terengganu"
+
+        if self.state == "JHR":
+            if year > 2014:
+                self[date(year, MAR, 23)] = "Birthday of the Sultan of Johor"
+
+        if self.state == "MLK":
+            self[
+                date(year, APR, 15)
+            ] = "Declaration of Malacca as a Historical City in Melaka"
+            second_fri = self.get_second_friday(year, 10)
+            self[
+                date(year, OCT, second_fri)
+            ] = "Birthday of the Governor of Melaka"
+
+        if self.state == "PRK":
+            if year > 2016:
+                first_fri = self.get_first_friday(year, 11)
+                self[
+                    date(year, NOV, first_fri)
+                ] = "Birthday of the Sultan of Perak"
+            else:
+                # This Holiday used to be  on 27th untill 2017
+                # https://www.officeholidays.com/holidays/malaysia/birthday-of-the-sultan-of-perak
+                self[date(year, NOV, 27)] = "Birthday of the Sultan of Perak"
+
+        if self.state == "KTN":
+            self[date(year, NOV, 11)] = "Birthday of the Sultan of Kelantan"
+            self[
+                date(year, NOV, 12)
+            ] = "Birthday of the Sultan of Kelantan Holiday"
+
+        if self.state == "SGR":
+            self[date(year, DEC, 11)] = "Birthday of The Sultan of Selangor"
+
+        if self.state in ("LBN", "SBH"):
+            self[date(year, MAY, 30)] = "Pesta Kaamatan"
+            self[date(year, MAY, 31)] = "Pesta Kaamatan (Second day)"
+
+        if self.state == "SWK":
+            self[date(year, JUN, 1)] = "Gawai Dayak"
+            self[date(year, JUN, 2)] = "Gawai Dayak (Second day)"
+            # Find the second satruday of Oct
+            # for the birthday of the Governor
+            second_sat = self.get_second_saturday(year, 10)
+            self[
+                date(year, OCT, second_sat)
+            ] = "Birthday of the Governor of Sarawak"
+            if year > 2016:
+                self[date(year, JUL, 22)] = "Sarawak Day"
+
+        if self.state == "SBH":
+            # Find the first satruday of Oct
+            # for Birthday of the Governor
+            first_sat = self.get_first_saturday(year, 10)
+            self[
+                date(year, OCT, first_sat)
+            ] = "Birthday of the Governor of Sabah"
+            if year > 2018:
+                self[date(year, DEC, 24)] = "Christmas Eve"
+
+        if self.state == "PNG":
+            self[date(year, JUL, 7)] = "George Town Heritage Day"
+            # Find the second satruday of July
+            # for the birthday of the Governor
+            second_sat = self.get_second_saturday(year, 7)
+            self[
+                date(year, JUL, second_sat)
+            ] = "Birthday of the Governor of Penang"
+
+        # Hari Raya Aidilfitri
         # aka Eid al-Fitr
         # date of observance is announced yearly
         dates_obs = {
@@ -99,22 +220,19 @@ class Singapore(HolidayBase):
         if year in dates_obs:
             for date_obs in dates_obs[year]:
                 hol_date = date(year, *date_obs)
-                self[hol_date] = "Hari Raya Puasa"
-                # Second day of Hari Raya Puasa (up to and including 1968)
-                # Removed since we don't have Hari Raya Puasa dates for the
-                # the years <= 1968:
-                # if year <= 1968:
-                #     self[hol_date + rd(days=+1),
-                #                  "Second day of Hari Raya Puasa")
+                self[hol_date] = "Hari Raya Aidilfitri"
+                hol_date += rd(days=+1)
+                self[hol_date] = "Hari Raya Aidilfitri Holiday"
+
         else:
             for date_obs in self.get_hrp_date(year):
                 hol_date = date_obs
-                self[hol_date] = "Hari Raya Puasa* (*estimated)"
+                self[hol_date] = "Hari Raya Aidilfitri* (*estimated)"
                 # Second day of Hari Raya Puasa (up to and including 1968)
                 if year <= 1968:
                     hol_date += rd(days=+1)
                     self[hol_date] = (
-                        "Second day of Hari Raya Puasa*" " (*estimated)"
+                        "Second day of Hari Raya Aidilfitri*" " (*estimated)"
                     )
 
         # Hari Raya Haji
@@ -148,6 +266,13 @@ class Singapore(HolidayBase):
             for date_obs in dates_obs[year]:
                 hol_date = date(year, *date_obs)
                 self[hol_date] = "Hari Raya Haji"
+                if self.state == "TRG":
+                    # The Arafat Day is one day before Eid al-Adha
+                    self[hol_date - rd(days=1)] = "Arafat Day"
+                if self.state in ("KDH", "KTN" "PLS"):
+                    # The Arafat Day is one day before Eid al-Adha
+                    self[hol_date + rd(days=1)] = "Hari Raya Haji Holiday"
+
         else:
             for date_obs in self.get_hrh_date(year):
                 hol_date = date_obs
@@ -202,7 +327,7 @@ class Singapore(HolidayBase):
             self[hol_date] = "Vesak Day* (*estimated; ~10% chance +/- 1 day)"
 
         # National Day
-        self[date(year, AUG, 9)] = "National Day"
+        self[date(year, AUG, 31)] = "National Day"
 
         # Deepavali
         # aka Diwali
@@ -241,31 +366,25 @@ class Singapore(HolidayBase):
         # Christmas Day
         self[date(year, DEC, 25)] = "Christmas Day"
 
-        # Boxing day (up to and including 1968)
-        if year <= 1968:
-            self[date(year, DEC, 26)] = "Boxing Day"
-
-        # Polling Day
+        # Malaysia General Election Holiday
         dates_obs = {
-            2001: (NOV, 3),
-            2006: (MAY, 6),
-            2011: (MAY, 7),
-            2015: (SEP, 11),
-            2020: (JUL, 10),
+            # The years 1955 1959 1995 seems to have the elections
+            # one weekday but I am not sure if they were marked as
+            # Holidays
+            1999: (NOV, 29),
+            2018: (MAY, 9),
         }
         if year in dates_obs:
-            self[date(year, *dates_obs[year])] = "Polling Day"
+            self[
+                date(year, *dates_obs[year])
+            ] = "Malaysia General Election Holiday"
 
-        # SG50 Public holiday
-        # Announced on 14 March 2015
-        # https://www.mom.gov.sg/newsroom/press-releases/2015/sg50-public-holiday-on-7-august-2015
-        if year == 2015:
-            self[date(2015, AUG, 7)] = "SG50 Public Holiday"
-
-        # Check for holidays that fall on a Sunday and implement Section 4(2)
-        # of the Holidays Act: "if any day specified in the Schedule falls on
-        # a Sunday, the day next following not being itself a public holiday
-        # is declared a public holiday in Singapore."
+        # Check for holidays that fall on a Sunday and
+        # implement Section 3 of Malaysian Holidays Act:
+        # " if any day specified in the Schedule falls on
+        # Sunday then the day following shall be a public
+        # holiday and if such day is already a public holiday,
+        # then the day following shall be a public holiday"
         for (hol_date, hol_name) in list(self.items()):
             if hol_date.year == year and hol_date.weekday() == SUN:
                 self[hol_date] += " [Sunday]"
@@ -273,6 +392,83 @@ class Singapore(HolidayBase):
                 while in_lieu_date in self:
                     in_lieu_date += rd(days=+1)
                 self[in_lieu_date] = hol_name + " [In lieu]"
+
+    def get_first_friday(self, year, month):
+        """Get the first friday of a specific Year and month.
+
+        Args:
+            Year (String): The desired Year.
+            Month (int): The desired Month.
+
+        Returns:
+            int: The day of the first friday.
+        """
+        d = date(year, month, 1)
+        while d.month == month:
+            if d.weekday() == 4:
+                break
+            d += timedelta(days=1)
+        return d.day
+
+    def get_second_friday(self, year, month):
+        """Get the second friday of a specific Year and month.
+
+        Args:
+            Year (String): The desired Year.
+            Month (int): The desired Month.
+
+        Returns:
+            int: The day of the second friday.
+        """
+
+        d = date(year, month, 1)
+        desired_day = []
+        while d.month == month:
+            if d.weekday() == 4:  # friday is the fourth day
+                desired_day.append(d.day)
+                if len(desired_day) > 1:
+                    break  # get only the day we need
+            d += timedelta(days=1)
+        return desired_day[1]
+
+    def get_first_saturday(self, year, month):
+        """Get the first Saturday of a specific Year and month.
+
+        Args:
+            Year (String): The desired Year.
+            Month (int): The desired Month.
+
+        Returns:
+            int: The day of the first Saturday.
+        """
+
+        d = date(year, month, 1)
+        while d.month == month:
+            if d.weekday() == 5:
+                break
+
+            d += timedelta(days=1)
+        return d.day
+
+    def get_second_saturday(self, year, month):
+        """Get the second Saturday of a specific Year and month.
+
+        Args:
+            Year (String): The desired Year.
+            Month (int): The desired Month.
+
+        Returns:
+            int: The day of the second Saturday.
+        """
+        d = date(year, month, 1)
+        desired_day = []
+        while d.month == month:
+            if d.weekday() == 5:  # Saturday
+                desired_day.append(d.day)
+                if len(desired_day) > 1:
+                    break  # get only the day we need
+            d += timedelta(days=1)
+        return desired_day[1]
 
     # The below is used to calculate lunar new year (i.e. Chinese new year)
     # Code borrowed from Hong Kong entry as of 16-Nov-19
@@ -555,9 +751,9 @@ class Singapore(HolidayBase):
         return get_gre_date(year, 12, 10)
 
 
-class SG(Singapore):
+class MY(Malaysia):
     pass
 
 
-class SGP(Singapore):
+class MYS(Malaysia):
     pass
